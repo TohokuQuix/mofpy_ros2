@@ -1,0 +1,25 @@
+# Vim
+*.swp
+*.swo
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# colcon
+build/
+install/
+log/
+
+# rosdoc2
+docs_output/
+docs_build/
+cross_reference/
+
+# Python
+*.pyc
+
+# clangd
+.cache/
+
+dep/

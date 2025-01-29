@@ -1,0 +1,56 @@
+rate: 50
+timeout:
+  press: 0.1
+  sequence: 0.2
+
+presets:
+  switch_state_to_chassis:
+    trigger: [OP, OP]
+    action:
+      - type: shared_values
+        key: state
+        initial: 0
+        value: 'chassis'
+  switch_state_to_arm:
+    trigger: [SH, SH]
+    action:
+      - type: shared_values
+        key: state
+        value: 'arm'
+  super:
+    # Dummy
+    trigger: [C_U, C_U, C_D, C_D, C_L, C_R, C_L, C_R, X, O]
+    action:
+      - type: publish
+        topic:
+          name: foo
+          type: std_msgs/String
+        values:
+          data: 'You found the secret command!'
+  hello:
+    # Dummy
+    trigger: always
+    action:
+      - type: publish
+        topic:
+          name: hello
+          type: std_msgs/String
+        values:
+          data: 'Hello'
+  sample_twist:
+    # Publish twist with a fixed value
+    trigger: Q
+    action:
+      - type: publish
+        topic:
+          name: bar
+          type: geometry_msgs/TwistStamped
+        values:
+          header:
+            stamp: now
+            frame_id: base_link
+          twist:
+            linear:
+              x: 1
+            angular:
+              z: 0.2

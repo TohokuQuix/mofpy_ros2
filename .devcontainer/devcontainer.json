@@ -1,0 +1,50 @@
+{
+  "name": "ros 2",
+  "image": "mcr.microsoft.com/devcontainers/cpp:jammy",
+  "features": {
+    "ghcr.io/adamlm/devcontainer-features/ros2:0": {
+      "distro": "humble"
+    },
+    "ghcr.io/devcontainers-contrib/features/apt-packages:1": {
+      "packages": "ros-humble-foxglove-bridge,python3-colcon-mixin,mold,ccache,cpplint,clang-format,cmake-format,doxygen,python3-rosdep,yamllint",
+      "installsAfter": ["ghcr.io/adamlm/devcontainer-features/ros2"]
+    },
+    "ghcr.io/devcontainers-contrib/features/pipx-package:1": {
+      "package": "https://github.com/ros-infrastructure/rosdoc2/archive/refs/heads/main.zip"
+    },
+    "ghcr.io/prulloac/devcontainer-features/pre-commit:1": {},
+    "ghcr.io/guiyomh/features/just:0": {}
+  },
+  "forwardPorts": [9090],
+  "remoteEnv": {
+    "ROS_DISTRO": "humble"
+  },
+  "containerEnv": {
+    "TZ": "Asia/Tokyo"
+  },
+  "postCreateCommand": "bash .devcontainer/postCreateCommand.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.autopep8",
+        "skellock.just",
+        "cheshirekow.cmake-format",
+        "ms-vscode.cmake-tools",
+        "redhat.vscode-xml",
+        "redhat.vscode-yaml",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "lextudio.restructuredtext-pack",
+        "bbenoist.Doxygen",
+        "ms-vscode.live-server",
+        "esbenp.prettier-vscode",
+        "EditorConfig.EditorConfig",
+        "DavidAnson.vscode-markdownlint",
+        "mine.cpplint"
+      ]
+    }
+  },
+  "runArgs": [
+    "--device=/dev/input/js0"
+  ]
+}

@@ -1,0 +1,51 @@
+name: deploy-docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  get-paths:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    container: ros:humble
+    outputs:
+      self-package-paths: ${{ steps.get-self-package-paths.outputs.paths }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Get self package paths
+        id: get-self-package-paths
+        uses: Closer-Robotics/closer-github-actions/get-self-package-paths@v1
+
+  build:
+    runs-on: ubuntu-22.04
+    needs: get-paths
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build docs
+        uses: Closer-Robotics/closer-github-actions/build-docs@v1
+        with:
+          target-package-paths: ${{ needs.get-paths.outputs.self-package-paths }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-22.04
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
+        if: ${{ github.ref == 'refs/heads/main' }}
