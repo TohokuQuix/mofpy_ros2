@@ -1,11 +1,11 @@
 import rclpy
 from rclpy.node import Node
-
-from .preset_handler import PresetHandler
-from .named_mapping import NamedMappings
-from .definition import Definitions
-
 from sensor_msgs.msg import Joy
+
+from .definition import Definitions
+from .named_mapping import NamedMappings
+from .preset_handler import PresetHandler
+
 
 class Mofpy(Node):
     def __init__(self):
@@ -14,9 +14,6 @@ class Mofpy(Node):
         config = self.declare_parameter("config", [""]).value
         Definitions.parse(config)
 
-        # self.get_logger().info(f"presets : {presets}")
-        definition = Definitions.get("presets")
-        # self.get_logger().info(f"definitions : {str(definition)}")
         if Definitions.definitions:
             joy_bames = NamedMappings()
             handler = PresetHandler(joy_bames, self)

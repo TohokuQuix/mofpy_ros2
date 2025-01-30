@@ -1,16 +1,21 @@
+import copy
+from threading import Lock
+
 import rclpy
 import rclpy.duration
-import rclpy.time
 from rclpy.node import Node
-from .joy_mapping import JoyMapping
-
-import copy
+import rclpy.time
 import six
 
-from threading import Lock
 
 class EventManager:
     """
+    Manage input events and triggers presets based on button sequences.
+
+    This class detects key up/down events, manages button sequences, and
+    determines which presets should be activated based on predefined triggers.
+    It supports both short and long press detection.
+
     :type __def_seq: dict[frozenset[str], list[str]
     :type __def_long: dict[frozenset[str], dict[str, str | rospy.Time]]
     :type __pressed: set[str]
@@ -22,10 +27,11 @@ class EventManager:
     :type __triggered_presets: list[str]
     :type __prev_named_buttons: dict[str, JoyMapping]
     """
+
     def __init__(self, node: Node, timeout_press, timeout_sequence):
         self.__node = node
-        self.__def_seq = dict()
-        self.__def_long = dict()
+        self.__def_seq = {}
+        self.__def_long = {}
 
         self.__pressed = set()
         self.__long_pressed = set()
@@ -33,7 +39,9 @@ class EventManager:
         # Ongoing sequence
         self.__sequence = []
 
-        self.RESET = rclpy.time.Time(seconds=0, nanoseconds=0, clock_type=node.get_clock().clock_type)
+        self.RESET = rclpy.time.Time(
+            seconds=0, nanoseconds=0, clock_type=node.get_clock().clock_type
+        )
         # Timeout stamp for single button press
         self.__press_stamp = self.RESET
         # Timeout stamp for sequence completion
@@ -49,13 +57,13 @@ class EventManager:
         self.__triggered_always = []
 
         # Used to determine key down events
-        self.__prev_named_buttons = dict()
+        self.__prev_named_buttons = {}
 
         self.__timer = self.__node.create_timer(0.001, self.__timer_callback__)
 
     def register(self, preset_name, sequence):
         """
-        Registers a present name with the trigger (command sequence)
+        Register a present name with the trigger (command sequence).
 
         For example, the trigger ('X', ('O', 'X'), 'O') means a sequence of
         'X', followed by a simultaneous press of 'O' and 'X', followed by 'O'.
@@ -65,7 +73,7 @@ class EventManager:
         :param sequence:
         :return:
         """
-        if sequence == 'always':
+        if sequence == "always":
             self.__triggered_always.append(preset_name)
         elif isinstance(sequence, six.string_types):
             # Single press
@@ -80,9 +88,9 @@ class EventManager:
             else:
                 trigger = frozenset(trigger)
             self.__def_long[trigger] = {
-                'preset_name': preset_name,
-                'duration': rclpy.duration.Duration(duration),
-                'timeout': self.RESET,
+                "preset_name": preset_name,
+                "duration": rclpy.duration.Duration(duration),
+                "timeout": self.RESET,
             }
             return
         else:
@@ -105,6 +113,12 @@ class EventManager:
 
     def append(self, named_buttons):
         """
+        Update the button press state and track sequence triggers.
+
+        This method detects which buttons have been pressed or released,
+        updates the internal state, and determines if a sequence trigger
+        needs to be activated.
+
         :param named_buttons:
         :type named_buttons: dict[str, JoyMapping]
         :return:
@@ -131,7 +145,8 @@ class EventManager:
 
     def __get_changed_buttons__(self, named_buttons):
         """
-        Detects the key up and key down
+        Detect the key up and key down.
+
         :param named_buttons: Current input from the controller
         :type named_buttons: dict[str, JoyMapping]
         :return: Tuple of button names that changed
@@ -158,7 +173,7 @@ class EventManager:
 
     def get_sequence_triggered(self):
         """
-        Gets the presets that are triggered by the currently-input sequence
+        Get the presets that are triggered by the currently-input sequence.
 
         :return: names of the presets that are triggered
         """
@@ -176,8 +191,7 @@ class EventManager:
         now = self.__node.get_clock().now()
 
         # Short Press timed out
-        if self.__press_stamp != self.RESET and \
-                now >= self.__press_stamp:
+        if self.__press_stamp != self.RESET and now >= self.__press_stamp:
             pressed_keys = frozenset(self.__pressed)
             if len(pressed_keys) != 0:
                 self.__sequence.append(pressed_keys)
@@ -188,8 +202,7 @@ class EventManager:
             self.__pressed_mutex.release()
 
         # Sequence timed out
-        if self.__sequence_stamp != self.RESET and \
-                now >= self.__sequence_stamp:
+        if self.__sequence_stamp != self.RESET and now >= self.__sequence_stamp:
             cmd = tuple(self.__sequence)
             if cmd in self.__def_seq:
                 self.__triggered_presets = self.__def_seq[cmd]
@@ -202,15 +215,15 @@ class EventManager:
         # Long press
         long_pressed = frozenset(self.__long_pressed)
         if long_pressed in self.__def_long:
-            timeout = self.__def_long[long_pressed]['timeout']
+            timeout = self.__def_long[long_pressed]["timeout"]
             # Started to long press
             if timeout == self.RESET:
-                duration = self.__def_long[long_pressed]['duration']
+                duration = self.__def_long[long_pressed]["duration"]
                 timeout = now + duration
-                self.__def_long[long_pressed]['timeout'] = timeout
+                self.__def_long[long_pressed]["timeout"] = timeout
             # Finished long press
             elif now >= timeout:
-                preset_name = self.__def_long[long_pressed]['preset_name']
+                preset_name = self.__def_long[long_pressed]["preset_name"]
                 self.__triggered_presets.append(preset_name)
 
                 self.__pressed_mutex.acquire(True)
@@ -220,7 +233,7 @@ class EventManager:
                 self.__sequence = []
         else:
             for key in self.__def_long:
-                self.__def_long[key]['timeout'] = self.RESET
+                self.__def_long[key]["timeout"] = self.RESET
 
     @staticmethod
     def __is_long_press__(sequence):

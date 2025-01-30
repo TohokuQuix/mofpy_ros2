@@ -44,7 +44,5 @@
       ]
     }
   },
-  "runArgs": [
-    "--device=/dev/input/js0"
-  ]
+  "runArgs": ["--device=/dev/input/js0"]
 }

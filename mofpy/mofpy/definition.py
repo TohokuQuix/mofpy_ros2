@@ -1,10 +1,10 @@
-import yaml
 import copy
-import rclpy.logging
+
+import yaml
 
 
 class Definitions:
-    definitions = dict()
+    definitions = {}
 
     def __init__(self):
         pass
@@ -13,13 +13,13 @@ class Definitions:
     def parse(filepaths):
         # node.get_logger().info(str(filepaths))
         for filepath in filepaths:
-            with open(filepath, 'r') as yml:
+            with open(filepath, "r") as yml:
                 definition = yaml.safe_load(yml)
                 Definitions.definitions = merge_dicts(Definitions.definitions, definition)
 
     @staticmethod
-    def get(key : str, default_val=None):
-        keys = key.split('/')
+    def get(key: str, default_val=None):
+        keys = key.split("/")
 
         d = copy.deepcopy(Definitions.definitions)
         if keys in d.items():
