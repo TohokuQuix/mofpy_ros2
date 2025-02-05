@@ -9,52 +9,52 @@ from .action import Action
 from ..shared import Shared
 
 
-class MoveitServo(Action):
+class MoveitServoTwist(Action):
 
-    NAME = "moveit_servo"
+    NAME = "moveit_servo_twist"
 
     def __init__(self, definition, node: Node):
-        super(MoveitServo, self).__init__(definition, node)
+        super(MoveitServoTwist, self).__init__(definition, node)
         Action.actions[self.__class__.NAME] = self.__class__
 
         self.__frame_id = self.get("frame_id", "base_link")
         self.__scale_trn = self.get("scale/translation", 0.1)
         self.__scale_rot = self.get("scale/rotation", 0.01)
         self.__quiet_on_zero = self.get("quiet_on_zero", True)
-        self.__namespace = self.get("namespace", "")
-        self.__not_stamped = self.get("not_stamped", False)
         self.__mapping = self.__mapping__()
         self.__published_zero = False
-
-        self.__node = node
 
         self.__pub = node.create_publisher(
             TwistStamped, self.__namespace + "/delta_twist_cmds", QoSProfile(depth=10)
         )
-        if not Shared.get("move_group_disabled") and not self.__servo_init__():
-            rclpy.logging.get_logger("mofpy.MoveitServo").error(
-                "Failed to initialize servo command type"
-            )
+        self.__client = node.create_client(
+            ServoCommandType, self.__namespace + "/switch_command_type"
+        )
 
     def execute(self, named_joy=None):
+        if Shared.get("move_group_disabled"):
+            return
+
+        if Shared.get("moveit_servo_command_type") != ServoCommandType.Request.TWIST:
+            if not self.__servo_init__(self.node):
+                rclpy.logging.get_logger("mofpy.MoveitServoTwist").error(
+                    "Failed to initialize servo command type"
+                )
+
         twist, is_quiet = self.__get_twist__(named_joy["axes"])
 
         if self.__quiet_on_zero:
             if is_quiet:
                 # Publish the all-zero message just once
                 if not self.__published_zero:
-                    self.__pub.publish(twist)
+                    self._pub.publish(twist)
                     self.__published_zero = True
                 return
 
-        self.__pub.publish(twist)
+        self._pub.publish(twist)
         self.__published_zero = False
 
     def __servo_init__(self, node: Node):
-        self.__client = node.create_client(
-            ServoCommandType, self.__namespace + "/switch_command_type"
-        )
-
         while not self.__client.wait_for_service(1):
             continue
 
@@ -62,20 +62,10 @@ class MoveitServo(Action):
         req.command_type = ServoCommandType.Request.TWIST
 
         res: ServoCommandType.Response = self.__client.call(req)
+        if res.success:
+            Shared.update("moveit_servo_command_type", ServoCommandType.Request.TWIST)
 
         return res.success
-
-    def __mapping__(self):
-        params = self.get("mapping", {})
-        mapping = {}
-        for key in params.keys():
-            val = params[key]
-            if type(val) is tuple or type(val) is list:
-                mapping[key] = [val[0], val[1]]
-            else:
-                mapping[key] = [val]
-
-        return mapping
 
     def __get_twist__(self, named_axes):
         dx = self.__scale_trn * self.__get_value__("x", named_axes)
@@ -93,20 +83,29 @@ class MoveitServo(Action):
         twist.angular.y = d_pitch
         twist.angular.z = d_yaw
 
-        if self.__not_stamped:
-            msg = twist
-        else:
-            msg = TwistStamped()
-            msg.header.stamp = self.__node.get_clock().now()
-            msg.header.frame_id = self.__frame_id
-            msg.twist = twist
+        msg = TwistStamped()
+        msg.header.stamp = self.node.get_clock().now()
+        msg.header.frame_id = self.__frame_id
+        msg.twist = twist
 
         is_quiet = all(val == 0 for val in [dx, dy, dz, d_roll, d_pitch, d_yaw])
         return msg, is_quiet
 
+    def __mapping__(self):
+        params = self.get("mapping", {})
+        mapping = {}
+        for key in params.keys():
+            val = params[key]
+            if type(val) is tuple or type(val) is list:
+                mapping[key] = [val[0], val[1]]
+            else:
+                mapping[key] = [val]
+
+        return mapping
+
     def __get_value__(self, axis, named_axes):
         """
-        Extract the axis value from joy.
+        Extract the axis/buttons value from joy.
 
         :param axis: one of x, y, z, R, P, Y to get the value of
         :param named_axes: the processed joy values to get the value from
@@ -128,4 +127,4 @@ class MoveitServo(Action):
         return val
 
 
-Action.register_preset(MoveitServo)
+Action.register_preset(MoveitServoTwist)

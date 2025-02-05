@@ -46,7 +46,6 @@ class PresetHandler:
 
         if move_group_enabled:
             p = "move_group"
-            # action_namespace = self.__node.declare_parameter(p + ".action_namespace", "")
             planning_group = self.__node.declare_parameter(p + ".planning_group", "arm")
             namespace = self.__node.declare_parameter(p + ".namespace", "")
             connected = MoveGroupUtils.connect(node, planning_group, namespace)
