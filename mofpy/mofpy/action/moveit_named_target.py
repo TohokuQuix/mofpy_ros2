@@ -1,4 +1,4 @@
-from moveit.moveit_py.moveit.core.robot_state import RobotState
+from moveit.core.robot_state import RobotState
 import rclpy
 import rclpy.logging
 

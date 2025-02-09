@@ -2,7 +2,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TwistStamped
 from moveit_msgs.srv import ServoCommandType
 import rclpy
-from rclpy import Node
+from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
 from .action import Action

@@ -1,7 +1,7 @@
 from control_msgs.msg import JointJog
 from moveit_msgs.srv import ServoCommandType
 import rclpy
-from rclpy import Node
+from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
 from .action import Action
