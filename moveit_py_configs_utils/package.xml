@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>moveit_py_configs_utils</name>
+  <version>0.0.0</version>
+  <description>Python library for loading moveit config parameters in launch files</description>
+  <maintainer email="kzy.basect@gmail.com">Kazuya Oguma</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_param_builder</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>srdfdom</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
