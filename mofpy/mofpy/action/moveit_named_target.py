@@ -55,7 +55,7 @@ class MoveitNamedTarget(Action):
         plan = self.__planner.plan()
 
         if plan:
-            self.__executor.execute(plan.trajectory, controllers=[])
+            self.__moveit.execute(plan.trajectory, controllers=[])
 
 
 Action.register_preset(MoveitNamedTarget)
