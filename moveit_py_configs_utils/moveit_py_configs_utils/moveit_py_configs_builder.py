@@ -377,23 +377,24 @@ class MoveItPyConfigsBuilder(ParameterBuilder):
 
     def planning_scene_monitor(
         self,
-        publish_planning_scene: bool = True,
-        publish_geometry_updates: bool = True,
-        publish_state_updates: bool = True,
-        publish_transforms_updates: bool = True,
-        publish_robot_description: bool = False,
-        publish_robot_description_semantic: bool = False,
+        name="planning_scene_monitor",
+        robot_description="robot_description",
+        joint_state_topic="/joint_states",
+        attached_collision_object_topic="/moveit_cpp/planning_scene_monitor",
+        publish_planning_scene_topic="/moveit_cpp/publish_planning_scene",
+        monitored_planning_scene_topic="/moveit_cpp/monitored_planning_scene",
+        wait_for_initial_state_timeout=10.0,
     ):
         self.__moveit_configs.planning_scene_monitor = {
-            # TODO: Fix parameter namespace upstream -- see planning_scene_monitor.cpp:262
-            # "planning_scene_monitor": {
-            "publish_planning_scene": publish_planning_scene,
-            "publish_geometry_updates": publish_geometry_updates,
-            "publish_state_updates": publish_state_updates,
-            "publish_transforms_updates": publish_transforms_updates,
-            "publish_robot_description": publish_robot_description,
-            "publish_robot_description_semantic": publish_robot_description_semantic,
-            # }
+            "planning_scene_monitor_options": {
+                "name": name,
+                "robot_description": robot_description,
+                "joint_state_topic": joint_state_topic,
+                "attached_collision_object_topic": attached_collision_object_topic,
+                "publish_planning_scene_topic": publish_planning_scene_topic,
+                "monitored_planning_scene_topic": monitored_planning_scene_topic,
+                "wait_for_initial_state_timeout": wait_for_initial_state_timeout,
+            }
         }
         return self
 
@@ -419,6 +420,10 @@ class MoveItPyConfigsBuilder(ParameterBuilder):
         default_planning_pipeline: str = None,
         pipelines: List[str] = None,
         load_all: bool = True,
+        planning_attempts: int = 1,
+        max_velocity_scaling_factor: float = 1.0,
+        max_acceleration_scaling_factor: float = 1.0,
+        planning_time: float = 1.0,
     ):
         """Load planning pipelines parameters.
 
@@ -457,19 +462,56 @@ class MoveItPyConfigsBuilder(ParameterBuilder):
             "planning_pipelines": {
                 "pipeline_names": pipelines,
             },
-            "default_planning_pipeline": default_planning_pipeline,
+            "plan_request_params": {
+                "planning_attempts": planning_attempts,
+                "planning_pipeline": default_planning_pipeline,
+                "max_velocity_scaling_factor": max_velocity_scaling_factor,
+                "max_acceleration_scaling_factor": max_acceleration_scaling_factor,
+            },
         }
+
         for pipeline in pipelines:
             parameter_file = config_folder / (pipeline + "_planning.yaml")
             if not parameter_file.exists():
                 parameter_file = default_folder / (pipeline + "_planning.yaml")
-            self.__moveit_configs.planning_pipelines[pipeline] = load_yaml(parameter_file)
+            pipeline_config = load_yaml(parameter_file)
+            self.__moveit_configs.planning_pipelines[pipeline] = pipeline_config
+            # config = {
+            #     "planning_attempts": planning_attempts,
+            #     "planning_pipeline": pipeline,
+            #     "planned_id": planner_config["type"],
+            #     "max_velocity_scaling_factor": max_velocity_scaling_factor,
+            #     "max_acceleration_scaling_factor": max_acceleration_scaling_factor,
+            #     "planning_time": planning_time,
+            # }
+            # self.__moveit_configs.planning_pipelines[planner_name] = config
+            # for planner_name, planner_config in pipeline_config["planner_configs"]:
+            #     config = {
+            #         "planning_attempts": planning_attempts,
+            #         "planning_pipeline": pipeline,
+            #         "planned_id": planner_config["type"],
+            #         "max_velocity_scaling_factor": max_velocity_scaling_factor,
+            #         "max_acceleration_scaling_factor": max_acceleration_scaling_factor,
+            #         "planning_time": planning_time,
+            #     }
+            #     self.__moveit_configs.planning_pipelines[planner_name] = config
 
         # Special rule to add ompl planner_configs
         if "ompl" in self.__moveit_configs.planning_pipelines:
             ompl_config = self.__moveit_configs.planning_pipelines["ompl"]
             if "planner_configs" not in ompl_config:
                 ompl_config.update(load_yaml(default_folder / "ompl_defaults.yaml"))
+            for planner_name in ompl_config["planner_configs"].keys():
+                planner_config = ompl_config["planner_configs"][planner_name]
+                config = {
+                    "planning_attempts": planning_attempts,
+                    "planning_pipeline": "ompl",
+                    "planned_id": planner_config["type"],
+                    "max_velocity_scaling_factor": max_velocity_scaling_factor,
+                    "max_acceleration_scaling_factor": max_acceleration_scaling_factor,
+                    "planning_time": planning_time,
+                }
+                self.__moveit_configs.planning_pipelines[planner_name] = config
 
         return self
 
