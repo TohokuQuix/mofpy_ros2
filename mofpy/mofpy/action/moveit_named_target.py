@@ -1,4 +1,3 @@
-from moveit.core.robot_state import RobotState
 import rclpy
 import rclpy.logging
 
@@ -28,6 +27,7 @@ class MoveitNamedTarget(Action):
         self.__target_name = self.get_required("target_name")
 
     def execute(self, named_joy=None):
+        rclpy.logging.get_logger("mofpy.MoveitNamedTarget").error("Hello")
         if Shared.get("move_group_disabled"):
             msg = "move_group disabled; not executing: {0} {1}".format(
                 self.__action, self.__target_name
@@ -42,21 +42,16 @@ class MoveitNamedTarget(Action):
             "Moving to {0}".format(self.__target_name)
         )
         self.__planner.set_start_state_to_current_state()
-        named_target_values: dict = self.__planner.get_named_target_state_values()
 
-        if self.__target_name not in named_target_values:
+        if self.__target_name not in self.__planner.named_target_states:
             rclpy.logging.get_logger("mofpy.MoveitNamedTarget").error(
                 "could not find the named target '{}'. Please select from the list '{}'".format(
-                    self.__target_name, named_target_values.values()
+                    self.__target_name, self.__planner.named_target_states
                 )
             )
             return
 
-        goal_state = RobotState()
-        goal_state.robot_model = self.__moveit.get_robot_model()
-        goal_state.joint_positions = named_target_values[self.__target_name]
-
-        self.__planner.set_goal_state(goal_state)
+        self.__planner.set_goal_state(self.__target_name)
         plan = self.__planner.plan()
 
         if plan:

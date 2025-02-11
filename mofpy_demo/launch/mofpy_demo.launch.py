@@ -30,7 +30,8 @@ def generate_launch_description():
                 parameters=[
                     {
                         "config": [
-                            os.path.join(mofpy_demo_share_dir, "config", "presets", "preset.yaml"),
+                            os.path.join(mofpy_demo_share_dir, "config", "presets", "common.yaml"),
+                            os.path.join(mofpy_demo_share_dir, "config", "presets", "arm.yaml"),
                             os.path.join(mofpy_demo_share_dir, "config", "ps4_wired.yaml"),
                         ],
                         "move_group.planning_group": "panda_arm",

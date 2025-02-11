@@ -1,11 +1,15 @@
+import threading
+
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TwistStamped
 from moveit_msgs.srv import ServoCommandType
 import rclpy
+from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
 from .action import Action
+from ..move_group_utils import MoveGroupUtils
 from ..shared import Shared
 
 
@@ -25,11 +29,18 @@ class MoveitServoTwist(Action):
         self.__published_zero = False
 
         self.__pub = node.create_publisher(
-            TwistStamped, self.__namespace + "/delta_twist_cmds", QoSProfile(depth=10)
+            TwistStamped, MoveGroupUtils.servo_node_name + "/delta_twist_cmds", QoSProfile(depth=10)
         )
-        self.__client = node.create_client(
-            ServoCommandType, self.__namespace + "/switch_command_type"
+
+        client_node = Node(node.get_name() + "_moveit_servo_twist")
+        self.__client = client_node.create_client(
+            ServoCommandType, MoveGroupUtils.servo_node_name + "/switch_command_type"
         )
+
+        self.executor = SingleThreadedExecutor()
+        self.executor.add_node(client_node)
+        self.executor_thread = threading.Thread(target=self.executor.spin, daemon=True)
+        self.executor_thread.start()
 
     def execute(self, named_joy=None):
         if Shared.get("move_group_disabled"):
@@ -40,6 +51,7 @@ class MoveitServoTwist(Action):
                 rclpy.logging.get_logger("mofpy.MoveitServoTwist").error(
                     "Failed to initialize servo command type"
                 )
+                return
 
         twist, is_quiet = self.__get_twist__(named_joy["axes"])
 
@@ -47,21 +59,40 @@ class MoveitServoTwist(Action):
             if is_quiet:
                 # Publish the all-zero message just once
                 if not self.__published_zero:
-                    self._pub.publish(twist)
+                    self.__pub.publish(twist)
                     self.__published_zero = True
                 return
 
-        self._pub.publish(twist)
+        self.__pub.publish(twist)
         self.__published_zero = False
 
     def __servo_init__(self, node: Node):
         while not self.__client.wait_for_service(1):
-            continue
+            rclpy.logging.get_logger("moveit_servo_twist").info(
+                "waiting for service {} available...".format(self.__client.service_name)
+            )
+            pass
 
         req = ServoCommandType.Request()
         req.command_type = ServoCommandType.Request.TWIST
+        rclpy.logging.get_logger("moveit_servo_twist").info(
+            "call service {}".format(self.__client.service_name)
+        )
 
-        res: ServoCommandType.Response = self.__client.call(req)
+        self.future = self.__client.call_async(req)
+        self.executor.spin_until_future_complete(future=self.future, timeout_sec=1)
+
+        res: ServoCommandType.Response = self.future.result()
+
+        if not res:
+            rclpy.logging.get_logger("moveit_servo_twist").error(
+                "failed to get response from {}".format(self.__client.service_name)
+            )
+            return False
+
+        rclpy.logging.get_logger("moveit_servo_twist").info(
+            "get response from {}".format(self.__client.service_name)
+        )
         if res.success:
             Shared.update("moveit_servo_command_type", ServoCommandType.Request.TWIST)
 
@@ -84,7 +115,7 @@ class MoveitServoTwist(Action):
         twist.angular.z = d_yaw
 
         msg = TwistStamped()
-        msg.header.stamp = self.node.get_clock().now()
+        msg.header.stamp = self.node.get_clock().now().to_msg()
         msg.header.frame_id = self.__frame_id
         msg.twist = twist
 

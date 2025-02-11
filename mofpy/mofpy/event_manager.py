@@ -89,7 +89,7 @@ class EventManager:
                 trigger = frozenset(trigger)
             self.__def_long[trigger] = {
                 "preset_name": preset_name,
-                "duration": rclpy.duration.Duration(duration),
+                "duration": rclpy.duration.Duration(seconds=duration),
                 "timeout": self.RESET,
             }
             return

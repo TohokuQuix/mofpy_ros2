@@ -45,10 +45,7 @@ class PresetHandler:
             move_group_enabled = False
 
         if move_group_enabled:
-            p = "move_group"
-            planning_group = self.__node.declare_parameter(p + ".planning_group", "arm")
-            namespace = self.__node.declare_parameter(p + ".namespace", "")
-            connected = MoveGroupUtils.connect(node, planning_group.value, namespace.value)
+            connected = MoveGroupUtils.connect(node)
             move_group_enabled = move_group_enabled and connected
         Shared.add("move_group_disabled", not move_group_enabled)
         if move_group_enabled:

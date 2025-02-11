@@ -17,6 +17,12 @@ presets:
       - type: shared_values
         key: state
         value: arm
+  switch_state_to_arm_fk:
+    trigger: [[OP, SH], [OP, SH]]
+    action:
+      - type: shared_values
+        key: state
+        value: arm-fk
   super:
     # Dummy
     trigger: [C_U, C_U, C_D, C_D, C_L, C_R, C_L, C_R, X, O]
@@ -39,11 +45,12 @@ presets:
           data: Hello
   sample_twist:
     # Publish twist with a fixed value
+    enabled_states: chassis
     trigger: Q
     action:
       - type: publish
         topic:
-          name: bar
+          name: twist
           type: geometry_msgs/TwistStamped
         values:
           header:
