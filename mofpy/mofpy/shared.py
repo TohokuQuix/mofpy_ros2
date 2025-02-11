@@ -1,7 +1,8 @@
 from threading import Lock
 
+
 class Shared:
-    shared_values = dict()
+    shared_values = {}
     lock = Lock()
 
     def __init__(self):
@@ -31,7 +32,7 @@ class Shared:
         return Shared.shared_values[key]
 
     @staticmethod
-    def set(key, val):
+    def update(key, val):
         Shared.add(key, val)
 
     @staticmethod

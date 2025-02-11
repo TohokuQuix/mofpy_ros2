@@ -1,14 +1,20 @@
-import rclpy
-from rclpy.node import Node
-
-from .joy_mapping import JoyMapping, VirtAxis, VirtButton
 from .definition import Definitions
+from .joy_mapping import VirtAxis
+from .joy_mapping import VirtButton
+
 
 class NamedMappings:
     """
+    Maps raw joystick inputs to named virtual axes and buttons.
+
+    This class retrieves predefined virtual input definitions, processes
+    joystick messages, and provides a structured dictionary containing
+    named axes and buttons.
+
     :type __v_axes: dict[str, JoyMapping]
     :type __v_buttons: dict[str, JoyMapping]
     """
+
     def __init__(self):
 
         self.__v_axes = {}
@@ -25,8 +31,8 @@ class NamedMappings:
 
     def convert(self, msg):
         """
-        Processes the raw Joy message and converts them into a named,
-        normalized dictionary
+        Process the raw Joy message and converts them into a named, normalized dictionary.
+
         :param msg:
         :type msg: Joy
         :return:
@@ -40,8 +46,7 @@ class NamedMappings:
             try:
                 va.update_value(msg)
             except IndexError:
-                msg = 'Invalid axis index {0} for {1}'.format(va.real_index,
-                                                              va.name)
+                msg = "Invalid axis index {0} for {1}".format(va.real_index, va.name)
                 raise IndexError(msg)
             new_axes[va.name] = va
 
@@ -51,13 +56,12 @@ class NamedMappings:
             try:
                 vb.update_value(msg)
             except IndexError:
-                msg = 'Invalid button index {0} for {1}'.format(vb.real_index,
-                                                                vb.name)
+                msg = "Invalid button index {0} for {1}".format(vb.real_index, vb.name)
                 raise IndexError(msg)
             new_buttons[vb.name] = vb
 
         named_joy = {
-            'axes': new_axes,
-            'buttons': new_buttons,
+            "axes": new_axes,
+            "buttons": new_buttons,
         }
         return named_joy

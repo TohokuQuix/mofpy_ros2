@@ -1,0 +1,54 @@
+presets:
+  servo_twist:
+    trigger: always
+    enabled_states: [arm]
+    action:
+      - type: moveit_servo_twist
+        frame_id: panda_link0
+        scale:
+          translation: 0.05
+          rotation: 0.15
+        mapping:
+          x: LSV
+          y: LSH
+          z: [R2, -L2]
+          R: -RSH
+          P: RSV
+          Y: [L1, -R1]
+  ready:
+    trigger: [T, 1]
+    enabled_states: [arm]
+    action:
+      - type: moveit_named_target
+        target_name: ready
+  extended:
+    trigger: [Q, 1]
+    enabled_states: [arm]
+    action:
+      - type: moveit_named_target
+        target_name: extended
+  transport:
+    trigger: [O, 1]
+    enabled_states: [arm]
+    action:
+      - type: moveit_named_target
+        target_name: transport
+  servo_joint:
+    trigger: always
+    enabled_states: [arm-fk]
+    action:
+      - type: moveit_servo_joint
+        frame_id: base_link
+        scale: 0.1
+        mapping:
+          joints:
+            panda_joint1: X
+            panda_joint2: Q
+            panda_joint3: T
+            panda_joint4: O
+            panda_joint5: L1
+            panda_joint6: R1
+            panda_joint7: OP
+          axes:
+            plus: C_U
+            minus: C_L

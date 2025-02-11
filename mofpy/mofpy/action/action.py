@@ -1,19 +1,21 @@
-from abc import *
+from abc import abstractmethod
+
 from rclpy.node import Node
+
 
 class Action(object):
     # Note: Make sure to define the NAME in the derived class!
-    NAME = ''
+    NAME = ""
     # Action names and their corresponding classes
     actions = {}
     # Disabled actions due to import failure. module name => reason
     disabled = {}
 
-    def __init__(self, definition, node : Node):
+    def __init__(self, definition, node: Node):
         """
-        Define a action
+        Define a action.
 
-        :param definition: a dictionary containing the description of action
+        :param definition: a dictionary containing the description of action.
         """
         self.definition = definition
         self.node = node
@@ -21,10 +23,12 @@ class Action(object):
     @abstractmethod
     def execute(self, named_joy=None):
         """
-        Method that is called when a preset is triggered.
+        Call this method when a preset is triggered.
+
         The behavior of the method should be defined in the derived class, and
         the required parameters should be retrieved in the __init__ method of
         the derived class.
+
         :param named_joy:
         """
         raise NotImplementedError()
@@ -40,14 +44,15 @@ class Action(object):
 
     def get(self, key_name, default_val=None):
         """
-        Get the value in self.definition from a slash-separated key
+        Get the value in self.definition from a slash-separated key.
+
         :param key_name: slash-separated key name
         :param default_val: value to be used if key is not found
         :return: The value. If not found, returns None
         """
         definition = self.definition
 
-        for key in key_name.split('/'):
+        for key in key_name.split("/"):
             if key not in definition:
                 return default_val
             definition = definition[key]
@@ -56,7 +61,7 @@ class Action(object):
 
     def has(self, key_name):
         definition = self.definition
-        for key in key_name.split('/'):
+        for key in key_name.split("/"):
             if key not in definition:
                 return False
             definition = definition[key]
@@ -64,7 +69,7 @@ class Action(object):
 
     @staticmethod
     def register_preset(cls):
-        if cls.NAME == '':
-            msg = 'NAME not defined for class {0}'.format(cls.__name__)
+        if cls.NAME == "":
+            msg = "NAME not defined for class {0}".format(cls.__name__)
             raise ValueError(msg)
         Action.actions[cls.NAME] = cls
