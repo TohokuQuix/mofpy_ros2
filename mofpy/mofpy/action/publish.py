@@ -7,6 +7,7 @@ from rosidl_runtime_py.utilities import get_message
 import yaml
 
 from .action import Action
+from ..math_expression import MathExpression
 
 
 class Publish(Action):
@@ -47,6 +48,15 @@ class Publish(Action):
     def execute(self, named_joy=None):
         yaml_vals = yaml.load(str(self.__values), Loader=yaml.FullLoader)
         msg = self.__msg_class()
+
+        # 数式表現があれば数式展開する．失敗した場合は次の処理は行わない
+        yaml_vals, success = MathExpression.expressions(
+            yaml_vals, named_buttons=named_joy["buttons"], named_axes=named_joy["axes"]
+        )
+        if not success:
+            rclpy.logging.get_logger("mofpy.Publish").error("Failed to expand math expression")
+            return
+
         try:
             timestamp_fields = set_message_fields(
                 msg, yaml_vals, expand_header_auto=True, expand_time_now=True

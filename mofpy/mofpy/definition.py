@@ -11,11 +11,12 @@ class Definitions:
 
     @staticmethod
     def parse(filepaths):
-        # node.get_logger().info(str(filepaths))
         for filepath in filepaths:
             with open(filepath, "r") as yml:
                 definition = yaml.safe_load(yml)
-                Definitions.definitions = merge_dicts(Definitions.definitions, definition)
+                Definitions.definitions = Definitions.__merge_dicts__(
+                    Definitions.definitions, definition
+                )
 
     @staticmethod
     def get(key: str, default_val=None):
@@ -32,18 +33,16 @@ class Definitions:
 
         return d
 
-
-def merge_dicts(d1, d2):
-    merged = copy.deepcopy(d1)  # d1の内容をコピー
-    for key, value in d2.items():
-        if key in merged:
-            # 両方が辞書なら、再帰的にマージ
-            if isinstance(merged[key], dict) and isinstance(value, dict):
-                merged[key] = merge_dicts(merged[key], value)
+    @staticmethod
+    def __merge_dicts__(d1, d2):
+        merged = copy.deepcopy(d1)
+        for key, value in d2.items():
+            if key in merged:
+                # If both are dictionaries, recursively merge
+                if isinstance(merged[key], dict) and isinstance(value, dict):
+                    merged[key] = Definitions.__merge_dicts__(merged[key], value)
+                else:
+                    merged[key] = value
             else:
-                # d2 の値で上書き
                 merged[key] = value
-        else:
-            merged[key] = value
-    # rclpy.logging.get_logger("merge_dicts").info(f"merge: {str(merged)}, {str(d2)}")
-    return merged
+        return merged

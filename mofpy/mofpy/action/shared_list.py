@@ -4,11 +4,11 @@ from .action import Action
 from ..shared import Shared
 
 
-class SharedValues(Action):
-    NAME = "shared_values"
+class SharedList(Action):
+    NAME = "shared_list"
 
     def __init__(self, definition, node):
-        super(SharedValues, self).__init__(definition, node)
+        super(SharedList, self).__init__(definition, node)
         Action.actions[self.__class__.NAME] = self.__class__
 
         self.__key = self.get_required("key")
@@ -46,7 +46,7 @@ class SharedValues(Action):
         index = self.__next_index__()
         value = self.__select__(index)
 
-        rclpy.logging.get_logger("shared_values").info("{0} : {1}".format(self.__key, value))
+        rclpy.logging.get_logger("shared_list").info("{0} : {1}".format(self.__key, value))
 
     def __select__(self, index):
         Shared.add(self.__shared_index_key, index)
@@ -70,4 +70,4 @@ class SharedValues(Action):
         return next_index
 
 
-Action.register_preset(SharedValues)
+Action.register_preset(SharedList)
