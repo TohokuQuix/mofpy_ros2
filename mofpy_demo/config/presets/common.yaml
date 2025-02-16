@@ -7,22 +7,31 @@ presets:
   switch_state_to_chassis:
     trigger: [OP, OP]
     action:
-      - type: shared_values
+      - type: shared_value
         key: state
-        initial: 0
+        initial: chassis
         value: chassis
   switch_state_to_arm:
     trigger: [SH, SH]
     action:
-      - type: shared_values
+      - type: shared_value
         key: state
         value: arm
   switch_state_to_arm_fk:
     trigger: [[OP, SH], [OP, SH]]
     action:
-      - type: shared_values
+      - type: shared_value
         key: state
         value: arm-fk
+  state_pub:
+    trigger: always
+    action:
+      - type: publish
+        topic:
+          name: state
+          type: std_msgs/String
+        values:
+          data: ${shared(state)}
   super:
     # Dummy
     trigger: [C_U, C_U, C_D, C_D, C_L, C_R, C_L, C_R, X, O]
@@ -44,9 +53,9 @@ presets:
         values:
           data: Hello
   sample_twist:
-    # Publish twist with a fixed value
+    # Joyの値を用いてtwistトピックを配信
     enabled_states: chassis
-    trigger: Q
+    trigger: always
     action:
       - type: publish
         topic:
@@ -58,6 +67,31 @@ presets:
             frame_id: base_link
           twist:
             linear:
-              x: 1
+              x: ${axis(LSV) * 0.5}
             angular:
-              z: 0.2
+              z: ${axis(RSH) * 0.2}
+
+  sample_pub_float_inc:
+    enabled_states: chassis
+    trigger: always
+    action:
+      - type: shared_value
+        key: float_data
+        step: 0.1
+        enable_button: C_U
+        initial: 0.5
+      - type: publish
+        topic:
+          name: float
+          type: std_msgs/Float32
+        values:
+          data: ${shared(float_data)}
+
+  sample_pub_float_dec:
+    enabled_states: chassis
+    trigger: always
+    action:
+      - type: shared_value
+        key: float_data
+        step: -0.1
+        enable_button: C_D

@@ -5,16 +5,16 @@ on:
 
 jobs:
   build-and-test-differential:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
-          - humble
+          - jazzy
         include:
-          - rosdistro: humble
-            container: ros:humble
+          - rosdistro: jazzy
+            container: ros:jazzy
             build-depends-repos: build_depends.repos
     steps:
       - name: Generate token
