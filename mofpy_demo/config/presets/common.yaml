@@ -4,13 +4,13 @@ timeout:
   sequence: 0.2
 
 presets:
-  switch_state_to_chassis:
+  switch_state_to_common:
     trigger: [OP, OP]
     action:
       - type: shared_value
         key: state
-        initial: chassis
-        value: chassis
+        initial: common
+        value: common
   switch_state_to_arm:
     trigger: [SH, SH]
     action:
@@ -54,7 +54,7 @@ presets:
           data: Hello
   sample_twist:
     # Joyの値を用いてtwistトピックを配信
-    enabled_states: chassis
+    enabled_states: common
     trigger: always
     action:
       - type: publish
@@ -72,7 +72,7 @@ presets:
               z: ${axis(RSH) * 0.2}
 
   sample_pub_float_inc:
-    enabled_states: chassis
+    enabled_states: common
     trigger: always
     action:
       - type: shared_value
@@ -88,7 +88,7 @@ presets:
           data: ${shared(float_data)}
 
   sample_pub_float_dec:
-    enabled_states: chassis
+    enabled_states: common
     trigger: always
     action:
       - type: shared_value

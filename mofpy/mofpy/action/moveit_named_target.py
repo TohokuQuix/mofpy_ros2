@@ -27,7 +27,6 @@ class MoveitNamedTarget(Action):
         self.__target_name = self.get_required("target_name")
 
     def execute(self, named_joy=None):
-        rclpy.logging.get_logger("mofpy.MoveitNamedTarget").error("Hello")
         if Shared.get("move_group_disabled"):
             msg = "move_group disabled; not executing: {0} {1}".format(
                 self.__action, self.__target_name
