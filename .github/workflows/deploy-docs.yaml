@@ -19,7 +19,7 @@ jobs:
 
       - name: Get self package paths
         id: get-self-package-paths
-        uses: Closer-Robotics/closer-github-actions/get-self-package-paths@v1
+        uses: autowarefoundation/autoware-github-actions/get-self-package-paths@v1
 
   build:
     runs-on: ubuntu-24.04
@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build docs
-        uses: Closer-Robotics/closer-github-actions/build-docs@v1
+        uses: autowarefoundation/autoware-github-actions/build-docs@v1
         with:
           target-package-paths: ${{ needs.get-paths.outputs.self-package-paths }}
 
