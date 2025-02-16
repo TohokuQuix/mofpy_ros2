@@ -20,17 +20,9 @@ class SharedList(Action):
         if self.has("value"):
             self.__all_values = [self.get("value")]
         else:
-            # TODO: In bidirectional, specify values in only one action
             self.__all_values = self.get_required("values")
 
-        # Selection: round-robin or bidirectional
-        selection = self.get("selection", "round_robin")
-        self.__is_bidirectional = selection == "bidirectional"
-        if self.__is_bidirectional:
-            self.__wrap = self.get("wrap", False)
-        else:
-            # Don't want to disable wrapping in round_robin
-            self.__wrap = True
+        self.__wrap = self.get("wrap", False)
 
         # Push of a button increments/decrements the index
         direction = self.get("direction", "inc").lower()
