@@ -11,6 +11,7 @@
   <depend>launch</depend>
   <depend>launch_param_builder</depend>
   <depend>launch_ros</depend>
+  <depend>moveit_configs_utils</depend>
   <depend>srdfdom</depend>
 
   <export>
