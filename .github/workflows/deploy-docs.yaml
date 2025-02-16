@@ -12,14 +12,14 @@ jobs:
     if: github.event_name == 'push' || github.event.pull_request.merged == true
     container: ros:jazzy
     outputs:
-      self-package-paths: ${{ steps.get-self-package-paths.outputs.paths }}
+      self-packages: ${{ steps.get-self-packages.outputs.self-packages }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Get self package paths
-        id: get-self-package-paths
-        uses: autowarefoundation/autoware-github-actions/get-self-package-paths@v1
+      - name: Get self packages
+        id: get-self-packages
+        uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
   build:
     runs-on: ubuntu-24.04
@@ -31,7 +31,7 @@ jobs:
       - name: Build docs
         uses: autowarefoundation/autoware-github-actions/build-docs@v1
         with:
-          target-package-paths: ${{ needs.get-paths.outputs.self-package-paths }}
+          target-package-paths: ${{ needs.get-paths.outputs.self-packages }}
 
   deploy:
     needs: build
