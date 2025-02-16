@@ -25,9 +25,7 @@ ROS 2インストール手順は[こちら](https://docs.ros.org/en/jazzy/Instal
 
 ```bash
 git clone https://github.com/KazuyaOguma18/mofpy_ros2.git
-cd mofpy_ros2
-sudo apt install just python3-rosdep
-just deps
+bash ./setup.bash
 just build
 ```
 
@@ -58,7 +56,7 @@ moveit_setup_assistantで生成されたMoveItの設定ファイルをMoveItPy�
 ## Supported Joypads
 
 - [x] DualShock (PS4)
-- [] DualSense (PS5) comming soon ...
+- [ ] DualSense (PS5) comming soon ...
 
 ## Supported Actions
 
