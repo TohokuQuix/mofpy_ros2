@@ -1,12 +1,12 @@
 {
   "name": "ros 2",
-  "image": "mcr.microsoft.com/devcontainers/cpp:jammy",
+  "image": "mcr.microsoft.com/devcontainers/cpp:noble",
   "features": {
     "ghcr.io/adamlm/devcontainer-features/ros2:0": {
-      "distro": "humble"
+      "distro": "jazzy"
     },
     "ghcr.io/devcontainers-contrib/features/apt-packages:1": {
-      "packages": "ros-humble-foxglove-bridge,python3-colcon-mixin,mold,ccache,cpplint,clang-format,cmake-format,doxygen,python3-rosdep,yamllint",
+      "packages": "ros-jazzy-foxglove-bridge,python3-colcon-mixin,mold,ccache,cpplint,clang-format,cmake-format,doxygen,python3-rosdep,yamllint",
       "installsAfter": ["ghcr.io/adamlm/devcontainer-features/ros2"]
     },
     "ghcr.io/devcontainers-contrib/features/pipx-package:1": {
@@ -17,7 +17,7 @@
   },
   "forwardPorts": [9090],
   "remoteEnv": {
-    "ROS_DISTRO": "humble"
+    "ROS_DISTRO": "jazzy"
   },
   "containerEnv": {
     "TZ": "Asia/Tokyo"
