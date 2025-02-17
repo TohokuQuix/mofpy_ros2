@@ -18,9 +18,12 @@ else
     echo "source /opt/ros/jazzy/setup.bash" >>~/.bashrc
 fi
 
+# shellcheck disable=SC1091
+source /opt/ros/jazzy/setup.bash
+
 # aptでインストール可能なパッケージをインストール
-sudo apt install python3-colcon-mixin mold ccache cpplint clang-format cmake-format doxygen python3-rosdep yamllint npm just pipx
-colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
+sudo apt install python3-colcon-mixin mold ccache cpplint clang-format cmake-format doxygen python3-rosdep yamllint npm just pipx python3-vcstool python3-colcon-common-extensions
+colcon mixin add default https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml || echo "already installed 'default' continuing"
 colcon mixin update default
 
 # pipxでインストール可能なパッケージをインストール
@@ -28,4 +31,5 @@ pipx install rosdoc2 pre-commit
 pipx inject rosdoc2 sphinxcontrib-mermaid
 
 # 依存関係の解消
+sudo rosdep init || echo "already initialized 'rosdep'"
 just deps
