@@ -49,6 +49,4 @@ presets:
             panda_joint5: L1
             panda_joint6: R1
             panda_joint7: OP
-          axes:
-            plus: C_U
-            minus: C_L
+          value: [C_U, C_L]

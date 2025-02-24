@@ -24,7 +24,7 @@ class MoveitServoJoint(Action):
         self.__scale = self.get("scale", 0.1)
         self.__quiet_on_zero = self.get("quiet_on_zero", True)
         self.__joint_mapping = self.__mapping__("joints")
-        self.__axis_mapping = self.__mapping__("axes")
+        self.__value_mapping = self.__mapping__("value")
         self.__published_zero = False
 
         self.__pub = node.create_publisher(
@@ -56,7 +56,7 @@ class MoveitServoJoint(Action):
                 )
 
         jog_joints, is_quiet = self.__get_jog_joints__(named_joy["buttons"], named_joy["axes"])
-
+        
         if self.__quiet_on_zero:
             if is_quiet:
                 # Publish the all-zero message just once
@@ -103,11 +103,11 @@ class MoveitServoJoint(Action):
         msg.header.frame_id = self.__frame_id
         for joint in self.__joint_mapping:
             if joint in self.__joint_model_names:
-                v = self.__get_value__("plus", named_axes) - self.__get_value__("minus", named_axes)
+                v = self.__get_value__(named_axes)
                 vel = self.__scale * self.__get_enable_joint__(joint, named_buttons) * v
                 msg.joint_names.append(joint)
                 msg.velocities.append(vel)
-
+        
         is_quiet = all(val == 0 for val in msg.velocities)
         return msg, is_quiet
 
@@ -115,9 +115,16 @@ class MoveitServoJoint(Action):
         mapping_key = "mapping" + f"/{key}" if key else key
         params = self.get(mapping_key, {})
         mapping = {}
+        
+        if type(params) is not dict:
+            return params
+        
         for key in params.keys():
             val = params[key]
-            mapping[key] = val
+            if type(val) is tuple or type(val) is list:
+                mapping[key] = [val[0], val[1]]
+            else:
+                mapping[key] = val
 
         return mapping
 
@@ -128,7 +135,7 @@ class MoveitServoJoint(Action):
         button = self.__joint_mapping[joint_name]
         return 1 if named_buttons[button].value else 0
 
-    def __get_value__(self, axis, named_axes):
+    def __get_value__(self, named_axes):
         """
         Extract the axis/buttons value from joy.
 
@@ -136,10 +143,21 @@ class MoveitServoJoint(Action):
         :param named_axes: the processed joy values to get the value from
         :return: the value
         """
-        if axis not in self.__axis_mapping:
-            return 0
 
-        return named_axes[self.__axis_mapping[axis]].value
+        # List of button names to be added in order to get the value.
+        # A name could start with '-', indicating to invert the value
+        names = self.__value_mapping
+
+        if type(names) is not list:
+            return named_axes[names].value
+
+        val = 0
+        for name in names:
+            v = named_axes[name.lstrip("-")].value
+            if name.startswith("-"):
+                v = -v
+            val += v
+        return val
 
 
 Action.register_preset(MoveitServoJoint)
