@@ -56,7 +56,7 @@ class MoveitServoJoint(Action):
                 )
 
         jog_joints, is_quiet = self.__get_jog_joints__(named_joy["buttons"], named_joy["axes"])
-        
+
         if self.__quiet_on_zero:
             if is_quiet:
                 # Publish the all-zero message just once
@@ -107,7 +107,7 @@ class MoveitServoJoint(Action):
                 vel = self.__scale * self.__get_enable_joint__(joint, named_buttons) * v
                 msg.joint_names.append(joint)
                 msg.velocities.append(vel)
-        
+
         is_quiet = all(val == 0 for val in msg.velocities)
         return msg, is_quiet
 
@@ -115,10 +115,10 @@ class MoveitServoJoint(Action):
         mapping_key = "mapping" + f"/{key}" if key else key
         params = self.get(mapping_key, {})
         mapping = {}
-        
+
         if type(params) is not dict:
             return params
-        
+
         for key in params.keys():
             val = params[key]
             if type(val) is tuple or type(val) is list:
@@ -143,7 +143,6 @@ class MoveitServoJoint(Action):
         :param named_axes: the processed joy values to get the value from
         :return: the value
         """
-
         # List of button names to be added in order to get the value.
         # A name could start with '-', indicating to invert the value
         names = self.__value_mapping
