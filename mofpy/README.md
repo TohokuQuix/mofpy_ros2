@@ -35,10 +35,7 @@ MoveIt ServoのFKを実行します
 | scale               | float                | 速度スケール[rad/s]                                    |
 | quiet_on_zero       | bool                 | 出力関節角速度がすべてゼロのときにトピックを配信しない |
 | mapping/joint_names | dict(string, string) | 関節名とジョイパッドのボタン名のマッピング             |
-| mapping/axis/plus   | string               | 正方向に制御量を与えるジョイパッドの軸名               |
-| mapping/axis/minus  | string               | 負方向に制御量を与えるジョイパッドの軸名               |
-
-MEMO: 制御量のマッピングがわかりにくいので、今後改善します
+| mapping/value       | string or string[]   | 制御量を与えるジョイパッドの軸名，十字キーなどの正負で押すものが変わる際には配列で先頭に正の値となる軸名を，負の値となる軸名を入れる．符号反転が必要な場合は軸軸名の前に-をつける              |
 
 #### Example
 
@@ -59,9 +56,7 @@ servo_joint:
           panda_joint5: L1
           panda_joint6: R1
           panda_joint7: OP
-        axes:
-          plus: C_U
-          minus: C_L
+        value: [C_U, C_D]
 ```
 
 ### moveit_servo_twist
