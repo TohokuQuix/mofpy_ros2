@@ -43,29 +43,25 @@ virtual:
       real:
         type: axis
         index: 6
-      low_range: [-0.1, 0.0]
-      high_range: [-1.0, -0.1]
+      range: [-1.0, 0.0]
     # Left cursor button
     C_L:
       real:
         type: axis
         index: 6
-      low_range: [0.0, 0.1]
-      high_range: [0.1, 1.0]
+      range: [0.0, 0.1]
     # Up cursor button
     C_U:
       real:
         type: axis
         index: 7
-      low_range: [0.0, 0.1]
-      high_range: [0.1, 1.0]
+      range: [0.0, 1.0]
     # Down cursor button
     C_D:
       real:
         type: axis
         index: 7
-      low_range: [-0.1, 0.0]
-      high_range: [-1.0, -0.1]
+      range: [-1.0, 0.0]
   buttons:
     X:
       real:

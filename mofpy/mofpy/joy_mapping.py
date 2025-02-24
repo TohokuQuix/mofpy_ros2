@@ -34,6 +34,11 @@ class VirtAxis(JoyMapping):
         if self._is_ps_shoulder:
             self._button_counterpart = definition["ps_shoulder_counterpart"]
 
+        self._range = definition["range"] if "range" in definition else None
+        r = self._range
+        if r and r[0] > r[1]:
+            r[0], r[1] = r[1], r[0]
+
     def update_value(self, msg):
         # Normal case: treat axis as axis
         if self.real_type == JoyMapping.AXIS:
@@ -46,6 +51,12 @@ class VirtAxis(JoyMapping):
                     v = (-arr[self.real_index] + 1) * 0.5
             else:
                 v = arr[self.real_index]
+
+            if self._range:
+                if v < self._range[0]:
+                    v = self._range[0]
+                elif v > self._range[1]:
+                    v = self._range[1]
             self.value = v
         # Special case: treat button as axis
         else:
