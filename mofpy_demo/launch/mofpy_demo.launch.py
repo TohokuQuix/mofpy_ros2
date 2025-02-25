@@ -33,6 +33,7 @@ def generate_launch_description():
                             os.path.join(mofpy_demo_share_dir, "config", "presets", "common.yaml"),
                             os.path.join(mofpy_demo_share_dir, "config", "presets", "arm.yaml"),
                             os.path.join(mofpy_demo_share_dir, "config", "ps4_wired.yaml"),
+                            # os.path.join(mofpy_demo_share_dir, "config", "nintendo_switch_pro_controller.yaml"),
                         ],
                         "move_group.planning_group": "panda_arm",
                         "move_group.namespace": "",

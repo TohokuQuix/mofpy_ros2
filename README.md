@@ -86,6 +86,8 @@ moveit_setup_assistantで生成されたMoveItの設定ファイルをMoveItPy�
 
 ## 6. Supported Joypads
 
+- [x] Pro Controller (Nintendo Switch)
+- [ ] Joy-Con (Nintendo Switch) comming soon ...
 - [x] DualShock (PS4)
 - [ ] DualSense (PS5) comming soon ...
 
