@@ -42,10 +42,16 @@ class FlipperPositionControl(Action):
         )
 
         self.__joint_names = None
+        self.__is_first = True
 
         self.__positions = self.__get_positions__()
 
     def execute(self, named_joy=None):
+
+        if self.__is_first:
+            self.__is_first = False
+            self.__flipper_init__()
+
         if Shared.get("flipper_command_type") != "flipper_position_control":
             if not self.__flipper_init__():
                 rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(

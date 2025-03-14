@@ -1,5 +1,6 @@
 import re
 import threading
+import uuid
 
 from controller_manager_msgs.msg import ControllerState
 from controller_manager_msgs.srv import ListControllers
@@ -27,7 +28,9 @@ class FlipperVelocityControl(Action):
         self.__namespace = self.get_required("namespace")
         self.controller_name = self.get_required("controller_name")
 
-        client_node = Node(node.get_name() + "_flipper_vel_control")
+        client_node = Node(
+            node.get_name() + "_flipper_vel_control_" + str(uuid.uuid4()).replace("-", "")
+        )
         self.__list_controller_client = client_node.create_client(
             ListControllers, self.__namespace + "/controller_manager/list_controllers"
         )
@@ -97,7 +100,7 @@ class FlipperVelocityControl(Action):
 
         # 独立制御モードの場合
         if mode == "independent":
-            if self.__mapping[mode]["joints"] not in self.__joint_names:
+            if self.__mapping[mode]["joints"].keys() != self.__joint_names:
                 rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
                     "Joint names are not same between controller joints and mapping joints"
                 )
@@ -131,7 +134,8 @@ class FlipperVelocityControl(Action):
             return
 
         # 全ての角速度が0の場合はトピックは配信しない
-        if all(v == 0 for v in joint_velocities) and self.__published_zero:
+        all_zero = all(v == 0 for v in joint_velocities)
+        if all_zero and self.__published_zero:
             return
 
         if Shared.get("flipper_command_type") != "flipper_velocity_control":
@@ -141,9 +145,12 @@ class FlipperVelocityControl(Action):
                 )
                 return
 
+        # if all_zero:
+        #     joint_velocities = [1e-04 for _ in joint_velocities]
+
         # フリッパの関節角を配信
         self.__pub_flipper__(joint_velocities)
-        self.__published_zero = all(v == 0 for v in joint_velocities)
+        self.__published_zero = all_zero
 
     def __flipper_init__(self):
 
