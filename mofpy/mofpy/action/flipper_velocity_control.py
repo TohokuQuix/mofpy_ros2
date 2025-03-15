@@ -100,9 +100,12 @@ class FlipperVelocityControl(Action):
 
         # 独立制御モードの場合
         if mode == "independent":
-            if self.__mapping[mode]["joints"].keys() != self.__joint_names:
+            joint_mapping = self.__mapping[mode]["joints"]
+            if list(joint_mapping.keys()) != self.__joint_names:
                 rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
-                    "Joint names are not same between controller joints and mapping joints"
+                    "Joint names are not same between controller joints and mapping joints\n {} vs {}".format(
+                        self.__joint_names, list(joint_mapping.keys())
+                    )
                 )
                 return
             is_raise = buttons[self.__mapping[mode]["raise"]].value
@@ -115,12 +118,12 @@ class FlipperVelocityControl(Action):
                 direction = 0
 
             for joint_name in self.__joint_names:
-                if self.__mapping.get(mode, {}).get("joints", {}).get(joint_name) is not None:
+                if joint_mapping[joint_name] is None:
                     rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
                         "Joint not found {}".format(joint_name)
                     )
                     return
-                v = 1 if buttons[self.__mapping[mode]["joints"][joint_name]].value else 0
+                v = 1 if buttons[joint_mapping[joint_name]].value else 0
                 v = v * direction * self.__scale
                 joint_velocities.append(v)
 
