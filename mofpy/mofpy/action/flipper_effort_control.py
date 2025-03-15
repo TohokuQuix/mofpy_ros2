@@ -15,17 +15,17 @@ from .action import Action
 from ..shared import Shared
 
 
-class FlipperPositionControl(Action):
-    NAME = "flipper_position_control"
+class FlipperEffortControl(Action):
+    NAME = "flipper_effort_control"
 
     def __init__(self, definition, node: Node):
-        super(FlipperPositionControl, self).__init__(definition, node)
+        super(FlipperEffortControl, self).__init__(definition, node)
 
         self.__namespace = self.get_required("namespace")
         self.controller_name = self.get_required("controller_name")
 
         client_node = Node(
-            node.get_name() + "_flipper_pos_control_" + str(uuid.uuid4()).replace("-", "")
+            node.get_name() + "_flipper_eff_control_" + str(uuid.uuid4()).replace("-", "")
         )
         self.__list_controller_client = client_node.create_client(
             ListControllers, self.__namespace + "/controller_manager/list_controllers"
@@ -47,7 +47,7 @@ class FlipperPositionControl(Action):
         self.__joint_names = None
         self.__is_first = True
 
-        self.__positions = self.__get_positions__()
+        self.__efforts = self.__get_efforts__()
 
     def execute(self, named_joy=None):
 
@@ -55,27 +55,25 @@ class FlipperPositionControl(Action):
             self.__is_first = False
             self.__flipper_init__()
 
-        if Shared.get("flipper_command_type") != "flipper_position_control":
+        if Shared.get("flipper_command_type") != "flipper_effort_control":
             if not self.__flipper_init__():
-                rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(
-                    "Failed to initialize flipper position control"
+                rclpy.logging.get_logger("mofpy.FlipperEffortControl").error(
+                    "Failed to initialize flipper effort control"
                 )
                 return
 
         # フリッパの関節角度を取得
-        joint_positions = []
+        joint_efforts = []
         for joint_name in self.__joint_names:
-            if joint_name in self.__positions:
-                joint_positions.append(self.__positions[joint_name])
+            if joint_name in self.__efforts:
+                joint_efforts.append(self.__efforts[joint_name])
 
         # 制御量と関節角名の配列サイズが異なる場合はエラー
-        if len(joint_positions) != len(self.__joint_names):
-            rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(
-                "Invalid joint_positions"
-            )
+        if len(joint_efforts) != len(self.__joint_names):
+            rclpy.logging.get_logger("mofpy.FlipperEffortControl").error("Invalid joint_efforts")
             return
 
-        self.__pub_flipper__(joint_positions)
+        self.__pub_flipper__(joint_efforts)
 
     def __flipper_init__(self):
 
@@ -90,26 +88,26 @@ class FlipperPositionControl(Action):
                 break
 
         if flipper_controller is None:
-            rclpy.logging.get_logger("mofpy.FlipperPositionControl").error("Controller not found")
+            rclpy.logging.get_logger("mofpy.FlipperEffortControl").error("Controller not found")
             return False
 
         if flipper_controller.state != "active":
             # コントローラを有効化
             success = self.__switch_controller__(flipper_controller, controllers)
             if not success:
-                rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(
+                rclpy.logging.get_logger("mofpy.FlipperEffortControl").error(
                     "Failed to switch controller"
                 )
                 return False
 
-        Shared.update("flipper_command_type", "flipper_position_control")
+        Shared.update("flipper_command_type", "flipper_effort_control")
 
         # self.__joint_namesが存在しない場合は新規で登録
         if self.__joint_names is None:
             self.__joint_names = []
             # joint_namesをコントローラ一覧から抽出
             for interface in flipper_controller.required_command_interfaces:
-                self.__joint_names.append(re.sub(r"/position$", "", interface))
+                self.__joint_names.append(re.sub(r"/effort$", "", interface))
 
         return True
 
@@ -121,7 +119,7 @@ class FlipperPositionControl(Action):
 
         res: ListControllers.Response = self.lc_future.result()
         if res is None:
-            rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(
+            rclpy.logging.get_logger("mofpy.FlipperEffortControl").error(
                 "Failed to get controller list"
             )
             return None
@@ -155,21 +153,21 @@ class FlipperPositionControl(Action):
 
         res: SwitchController.Response = self.sc_future.result()
         if res is None:
-            rclpy.logging.get_logger("mofpy.FlipperPositionControl").error(
+            rclpy.logging.get_logger("mofpy.FlipperEffortControl").error(
                 "Failed to switch controller"
             )
             return False
 
         return res.ok
 
-    def __get_positions__(self):
+    def __get_efforts__(self):
         params = self.get("joints", {})
         return params
 
-    def __pub_flipper__(self, joint_positions):
+    def __pub_flipper__(self, joint_efforts):
         msg = Float64MultiArray()
-        msg.data = joint_positions
+        msg.data = joint_efforts
         self.__flipper_pub.publish(msg)
 
 
-Action.register_preset(FlipperPositionControl)
+Action.register_preset(FlipperEffortControl)
