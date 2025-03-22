@@ -25,7 +25,7 @@ class FlipperVelocityControl(Action):
     def __init__(self, definition, node: Node):
         super(FlipperVelocityControl, self).__init__(definition, node)
 
-        self.__namespace = self.get_required("namespace")
+        self.__namespace = self.get("namespace", "")
         self.controller_name = self.get_required("controller_name")
 
         client_node = Node(
