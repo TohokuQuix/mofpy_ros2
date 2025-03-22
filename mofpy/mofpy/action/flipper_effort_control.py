@@ -51,7 +51,7 @@ class FlipperEffortControl(Action):
 
     def execute(self, named_joy=None):
 
-        if self.__is_first:
+        if self.__is_first or self.__joint_names is None:
             self.__is_first = False
             self.__flipper_init__()
 

@@ -19,6 +19,10 @@ class SharedValue(Action):
 
         self.__enable_button = self.get("enable_button")
 
+        self.__has_limit = self.has("limit/max") and self.has("limit/min")
+        self.__max_limit = self.get("limit/max")
+        self.__min_limit = self.get("limit/min")
+
         if self.has("initial"):
             Shared.add(self.__key, self.get("initial", self.__value))
 
@@ -48,7 +52,11 @@ class SharedValue(Action):
 
         current_val = Shared.get(self.__key)
 
-        return current_val + self.__step
+        next_val = current_val + self.__step
+
+        return (
+            max(self.__min_limit, min(next_val, self.__max_limit)) if self.__has_limit else next_val
+        )
 
 
 Action.register_preset(SharedValue)
