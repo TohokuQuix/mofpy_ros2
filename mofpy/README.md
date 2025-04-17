@@ -2,6 +2,126 @@
 
 ## Actions
 
+### flipper_effort_control
+
+フリッパを力制御します
+
+#### Parameters
+
+| key             | type               | description
+| --------------- | ------------------ | ----------------------
+| namespace       | string             | コントローラの名前空間
+| controller_name | string             | コントローラ名
+| joints          | map(string, float) | ジョイント名と目標トルク値
+
+#### Example
+
+```yaml
+  flipper_0deg:
+    enabled_states: [chassis]
+    trigger: Q
+    action:
+      - type: flipper_position_control
+        controller_name: flipper_joint_position_controller
+        joints:
+          chassis/fl_flipper_joint: 0.
+          chassis/fr_flipper_joint: 0.
+          chassis/rl_flipper_joint: 0.
+          chassis/rr_flipper_joint: 0.
+```
+
+### flipper_positon_control
+
+フリッパを指定の位置へ制御します
+
+#### Parameters
+
+| key             | type               | description
+| --------------- | ------------------ | ----------------------
+| namespace       | string             | コントローラの名前空間
+| controller_name | string             | コントローラ名
+| joints          | map(string, float) | ジョイント名と目標位置
+
+#### Example
+
+```yaml
+flipper_torque_low:
+  enabled_states: [chassis]
+  trigger: X
+  action:
+    - type: flipper_effort_control
+      controller_name: flipper_joint_effort_controller
+      joints:
+        chassis/fl_flipper_joint: -2.0
+        chassis/fr_flipper_joint: -2.0
+        chassis/rl_flipper_joint: -2.0
+        chassis/rr_flipper_joint: -2.0
+```
+
+### flipper_velocity_control
+
+フリッパを速度制御します
+
+#### Parameters
+
+| key                                | type                | description
+| ---------------------------------- | ------------------- | ----------------------
+| namespace                          | string              | コントローラの名前空間
+| controller_name                    | string              | コントローラ名
+| scale                              | float               | 速度スケーリングかつ最大速度 [rad/s]
+| mapping/synchronous/front_flippers | string[]            | 前フリッパの関節リスト
+| mapping/synchronous/rear_flippers  | string[]            | 後フリッパの関節リスト
+| mapping/synchronous/front/raise    | string              | 前フリッパを正方向に同期制御するjoyの軸名
+| mapping/synchronous/front/lower    | string              | 前フリッパを負方向に同期制御するjoyの軸名
+| mapping/synchronous/rear/raise     | string              | 後フリッパを正方向に同期制御するjoyの軸名
+| mapping/synchronous/rear/lower     | string              | 後フリッパを負方向に同期制御するjoyの軸名
+| mapping/independent/raise          | string              | フリッパを正方向に非同期制御するjoyの軸名
+| mapping/independent/lower          | string              | フリッパを負方向に非同期制御するjoyの軸名
+| mapping/independent/joints         | map(string, string) | 非同期制御する上でアクティブにするジョイント名とボタンのマッピング
+
+#### Example
+
+```yaml
+flipper_velocity:
+  enabled_states: [chassis]
+  trigger: always
+  action:
+    - type: flipper_velocity_control
+      controller_name: flipper_joint_velocity_controller
+      scale: 0.5
+      mapping:
+        synchronous:
+          front_flippers:
+            - chassis/fl_flipper_joint
+            - chassis/fr_flipper_joint
+          rear_flippers:
+            - chassis/rl_flipper_joint
+            - chassis/rr_flipper_joint
+          front:
+            raise: R1
+            lower: R2
+          rear:
+            raise: L1
+            lower: L2
+        independent:
+          raise: C_U
+          lower: C_D
+          joints:
+            chassis/fl_flipper_joint: L1
+            chassis/fr_flipper_joint: R1
+            chassis/rl_flipper_joint: L2
+            chassis/rr_flipper_joint: R2
+
+change_flipper_mode:
+  trigger: [Q, 1]
+  enabled_states: [chassis]
+  action:
+    - type: shared_list
+      key: flipper_control_mode
+      wrap: true
+      values: [synchronous, independent]
+```
+
 ### moveit_named_target
 
 MoveGroupの名前付き目標姿勢を実行します
@@ -21,6 +141,30 @@ ready:
   action:
     - type: moveit_named_target
       target_name: ready
+```
+
+### moveit_partial_joint
+
+一部の関節のみの定型動作を実行します
+
+#### Parameters
+
+| key     | type                | description                              |
+| ------- | ------------------- | ---------------------------------------- |
+| joints  | map(string, float)  | 制御するジョイント名と目標関節角のマッピング |
+
+#### Example
+
+```yaml
+up_wrist_joints:
+  trigger: [[O, C_U], 0]
+  enabled_states: [arm]
+  action:
+    - type: moveit_partial_joint
+      joints:
+        arm/joint4: 1.57
+        arm/joint5: 0
+        arm/joint6: 0
 ```
 
 ### moveit_servo_joint
@@ -166,6 +310,8 @@ switch_state_to_common:
 | step          | float  | 増減量                                                                 |
 | enable_button | string | 有効化するボタン名．ボタンが押されている間実行する処理がある場合に使用 |
 | initial       | any    | 初期値                                                                 |
+| limit/max     | float  | 値の最大値                                                             |
+| limit/min     | float  | 値の最小値                                                             |
 
 #### Example
 
@@ -179,9 +325,11 @@ sample_inc:
       step: 0.1
       enable_button: C_U
       initial: 0.5
+      limit:
+        min: -1.
+        max: 1.
 ```
 
-MEMO: enable_buttonではなく条件式を使うように変更するかもしれません
 
 ## Math Expressions
 

@@ -62,7 +62,7 @@ class FlipperEffortControl(Action):
                 )
                 return
 
-        # フリッパの関節角度を取得
+        # フリッパのモータトルクを取得
         joint_efforts = []
         for joint_name in self.__joint_names:
             if joint_name in self.__efforts:
