@@ -89,7 +89,7 @@ moveit_setup_assistantで生成されたMoveItの設定ファイルをMoveItPy�
 - [x] Pro Controller (Nintendo Switch)
 - [ ] Joy-Con (Nintendo Switch) comming soon ...
 - [x] DualShock (PS4)
-- [ ] DualSense (PS5) comming soon ...
+- [x] DualSense (PS5)
 
 ## 7. Actions
 
@@ -106,7 +106,7 @@ moveit_setup_assistantで生成されたMoveItの設定ファイルをMoveItPy�
 ```yaml
 presets:
   sample:
-    trigger: [C_U]
+    trigger: C_U
     action:
       - type: hoge
         ...
@@ -210,11 +210,15 @@ presets:
 
 [mofpy/mofpy/action](https://github.com/KazuyaOguma18/mofpy_ros2/tree/main/mofpy/mofpy/action) にこれらの実装があります
 
-| Action                                                     | Description                             |
-| ---------------------------------------------------------- | --------------------------------------- |
-| [moveit_named_target](mofpy/README.md#moveit_named_target) | MoveGroupの名前付き目標姿勢を実行します |
-| [moveit_servo_joint](mofpy/README.md#moveit_servo_joint)   | MoveIt ServoのFKを実行します            |
-| [moveit_servo_twist](mofpy/README.md#moveit_servo_twist)   | MoveIt ServoのIKを実行します            |
-| [publish](mofpy/README.md#publish)                         | 任意のトピックにメッセージを配信します  |
-| [shared_list](mofpy/README.md#shared_list)                 | 配列型の共有変数を操作します            |
-| [shared_value](mofpy/README.md#shared_value)               | スカラー型の共有変数を操作します        |
+| Action                                                           | Description                             |
+| ---------------------------------------------------------------- | --------------------------------------- |
+| [flipper_effort_control](mofpy/README.md#flipper_effort_control) | フリッパを力制御します                    |
+| [flipper_position_control](mofpy/README.md#flipper_position_control) | フリッパを指定の位置へ制御します       |
+| [flipper_velocity_control](mofpy/README.md#flipper_velocity_control) | フリッパを速度制御します              |
+| [moveit_named_target](mofpy/README.md#moveit_named_target)       | MoveGroupの名前付き目標姿勢を実行します |
+| [moveit_partial_joint](mofpy/README.md#moveit_partial_joint)     | 一部の関節のみの定型動作を実行します       |
+| [moveit_servo_joint](mofpy/README.md#moveit_servo_joint)         | MoveIt ServoのFKを実行します            |
+| [moveit_servo_twist](mofpy/README.md#moveit_servo_twist)         | MoveIt ServoのIKを実行します            |
+| [publish](mofpy/README.md#publish)                               | 任意のトピックにメッセージを配信します  |
+| [shared_list](mofpy/README.md#shared_list)                       | 配列型の共有変数を操作します            |
+| [shared_value](mofpy/README.md#shared_value)                     | スカラー型の共有変数を操作します        |

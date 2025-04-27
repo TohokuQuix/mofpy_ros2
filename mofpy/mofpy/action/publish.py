@@ -17,7 +17,6 @@ class Publish(Action):
     :type __topic_name: str
     :type __topic_type: str
     :type __values: dict
-    :type __latch: bool
     """
 
     NAME = "publish"
@@ -49,9 +48,12 @@ class Publish(Action):
         yaml_vals = yaml.load(str(self.__values), Loader=yaml.FullLoader)
         msg = self.__msg_class()
 
+        named_buttons = named_joy["buttons"] if named_joy else {}
+        named_axes = named_joy["axes"] if named_joy else {}
+
         # 数式表現があれば数式展開する．失敗した場合は次の処理は行わない
         yaml_vals, success = MathExpression.expressions(
-            yaml_vals, named_buttons=named_joy["buttons"], named_axes=named_joy["axes"]
+            yaml_vals, named_buttons=named_buttons, named_axes=named_axes
         )
         if not success:
             rclpy.logging.get_logger("mofpy.Publish").error("Failed to expand math expression")
