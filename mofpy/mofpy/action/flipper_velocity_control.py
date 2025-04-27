@@ -67,14 +67,26 @@ class FlipperVelocityControl(Action):
         # 独立制御モードか否かを判定
         mode = Shared.get("flipper_control_mode", "synchronous")
 
+        # 移動方向を判別
+        locomotion_dir = Shared.get("chassis_direction_str", "front")
+
         # フリッパの関節角速度を設定
         buttons = named_joy["buttons"]
         joint_velocities = []
 
         # 統合制御モードの場合(前フリッパ，後フリッパを同時制御)
         if mode == "synchronous":
-            front_flippers = self.__mapping[mode]["front_flippers"]
-            rear_flippers = self.__mapping[mode]["rear_flippers"]
+            if locomotion_dir  == "front": #nomal mode
+                front_flippers = self.__mapping[mode]["front_flippers"]
+                rear_flippers = self.__mapping[mode]["rear_flippers"]
+            elif locomotion_dir  == "rear": #inverted mode
+                front_flippers = self.__mapping[mode]["rear_flippers"]
+                rear_flippers = self.__mapping[mode]["front_flippers"]
+            else:
+                rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
+                    "Invalid motion direction name: {}.".format(dir)
+                )
+
             if front_flippers is None or rear_flippers is None:
                 rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
                     "Front or rear flippers are empty"
@@ -123,7 +135,18 @@ class FlipperVelocityControl(Action):
                         "Joint not found {}".format(joint_name)
                     )
                     return
-                v = 1 if buttons[joint_mapping[joint_name]].value else 0
+                button_id = joint_mapping[joint_name]
+                if locomotion_dir == "rear": # if locomotion dir is inverted 
+                    if button_id == "L1":
+                        button_id = "R2"
+                    elif button_id == "L2":
+                        button_id = "R1"
+                    elif button_id == "R1":
+                        button_id = "L2"
+                    elif button_id == "R2":
+                        button_id = "L1"
+
+                v = 1 if buttons[button_id].value else 0
                 v = v * direction * self.__scale
                 joint_velocities.append(v)
 
