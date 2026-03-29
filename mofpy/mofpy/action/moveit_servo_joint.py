@@ -1,4 +1,5 @@
 import threading
+import time
 
 from control_msgs.msg import JointJog
 from moveit_msgs.srv import ServoCommandType
@@ -79,7 +80,11 @@ class MoveitServoJoint(Action):
         )
 
         self.future = self.__client.call_async(req)
-        self.executor.spin_until_future_complete(future=self.future, timeout_sec=1)
+        if not self.__wait_future__(self.future, timeout_sec=1.0):
+            rclpy.logging.get_logger("moveit_servo_joint_jog").error(
+                "timed out waiting for {}".format(self.__client.service_name)
+            )
+            return False
 
         res: ServoCommandType.Response = self.future.result()
 
@@ -96,6 +101,14 @@ class MoveitServoJoint(Action):
             Shared.update("moveit_servo_command_type", ServoCommandType.Request.JOINT_JOG)
 
         return res.success
+
+    def __wait_future__(self, future, timeout_sec: float) -> bool:
+        deadline = time.monotonic() + timeout_sec
+        while rclpy.ok() and time.monotonic() < deadline:
+            if future.done():
+                return True
+            time.sleep(0.01)
+        return future.done()
 
     def __get_jog_joints__(self, named_buttons, named_axes):
         msg = JointJog()

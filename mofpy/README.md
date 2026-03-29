@@ -128,9 +128,10 @@ MoveGroupの名前付き目標姿勢を実行します
 
 #### Parameters
 
-| key         | type   | description                       |
-| ----------- | ------ | --------------------------------- |
-| target_name | string | MoveGroupの名前付き目標姿勢の名前 |
+| key             | type        | description                                                      |
+| --------------- | ----------- | ---------------------------------------------------------------- |
+| target_name     | string      | MoveGroupの名前付き目標姿勢の名前                               |
+| time_from_start | float (opt) | 軌道終端時刻[s]を上書きする。指定時は計画軌道全体の時間を再スケール |
 
 #### Example
 
@@ -141,6 +142,7 @@ ready:
   action:
     - type: moveit_named_target
       target_name: ready
+      time_from_start: 8.0
 ```
 
 ### moveit_partial_joint
