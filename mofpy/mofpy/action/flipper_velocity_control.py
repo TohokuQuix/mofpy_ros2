@@ -1,5 +1,6 @@
 import re
 import threading
+import time
 import uuid
 
 from controller_manager_msgs.msg import ControllerState
@@ -195,7 +196,11 @@ class FlipperVelocityControl(Action):
         # コントローラの一覧を取得
         req = ListControllers.Request()
         self.lc_future = self.__list_controller_client.call_async(req)
-        self.executor.spin_until_future_complete(future=self.lc_future, timeout_sec=1)
+        if not self.__wait_future__(self.lc_future, timeout_sec=1.0):
+            rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
+                "Timed out waiting for controller list"
+            )
+            return None
 
         res: ListControllers.Response = self.lc_future.result()
         if res is None:
@@ -229,7 +234,11 @@ class FlipperVelocityControl(Action):
         req.strictness = SwitchController.Request.BEST_EFFORT
 
         self.sc_future = self.__switch_controller_client.call_async(req)
-        self.executor.spin_until_future_complete(future=self.sc_future, timeout_sec=1)
+        if not self.__wait_future__(self.sc_future, timeout_sec=1.0):
+            rclpy.logging.get_logger("mofpy.FlipperVelocityControl").error(
+                "Timed out waiting for controller switch"
+            )
+            return False
 
         res: SwitchController.Response = self.sc_future.result()
         if res is None:
@@ -239,6 +248,14 @@ class FlipperVelocityControl(Action):
             return False
 
         return res.ok
+
+    def __wait_future__(self, future, timeout_sec: float) -> bool:
+        deadline = time.monotonic() + timeout_sec
+        while rclpy.ok() and time.monotonic() < deadline:
+            if future.done():
+                return True
+            time.sleep(0.01)
+        return future.done()
 
     # マッピングを取得
     def __get_mapping__(self):

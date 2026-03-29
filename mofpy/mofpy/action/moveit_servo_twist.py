@@ -1,4 +1,5 @@
 import threading
+import time
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import TwistStamped
@@ -23,7 +24,7 @@ class MoveitServoTwist(Action):
 
         self.__frame_id = self.get("frame_id", "base_link")
         self.__scale_trn = self.get("scale/translation", 0.1)
-        self.__scale_rot = self.get("scale/rotation", 0.01)
+        self.__scale_rot = self.get("scale/rotation", 0.1)
         self.__quiet_on_zero = self.get("quiet_on_zero", True)
         self.__mapping = self.__mapping__()
         self.__published_zero = False
@@ -80,7 +81,11 @@ class MoveitServoTwist(Action):
         )
 
         self.future = self.__client.call_async(req)
-        self.executor.spin_until_future_complete(future=self.future, timeout_sec=1)
+        if not self.__wait_future__(self.future, timeout_sec=1.0):
+            rclpy.logging.get_logger("moveit_servo_twist").error(
+                "timed out waiting for {}".format(self.__client.service_name)
+            )
+            return False
 
         res: ServoCommandType.Response = self.future.result()
 
@@ -97,6 +102,14 @@ class MoveitServoTwist(Action):
             Shared.update("moveit_servo_command_type", ServoCommandType.Request.TWIST)
 
         return res.success
+
+    def __wait_future__(self, future, timeout_sec: float) -> bool:
+        deadline = time.monotonic() + timeout_sec
+        while rclpy.ok() and time.monotonic() < deadline:
+            if future.done():
+                return True
+            time.sleep(0.01)
+        return future.done()
 
     def __get_twist__(self, named_axes):
         dx = self.__scale_trn * self.__get_value__("x", named_axes)
