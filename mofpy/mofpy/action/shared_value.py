@@ -1,4 +1,5 @@
 import rclpy.logging
+from sensor_msgs.msg import JointState
 
 from .action import Action
 from ..shared import Shared
@@ -22,9 +23,20 @@ class SharedValue(Action):
         self.__has_limit = self.has("limit/max") and self.has("limit/min")
         self.__max_limit = self.get("limit/max")
         self.__min_limit = self.get("limit/min")
+        self.__joint_state_sub = None
+        self.__joint_state_initialized = False
 
         if self.has("initial"):
             Shared.add(self.__key, self.get("initial", self.__value))
+
+        if self.has("initial_from_joint_state/joint"):
+            topic = self.get("initial_from_joint_state/topic", "/joint_states")
+            self.__joint_name = self.get("initial_from_joint_state/joint")
+            self.__joint_scale = self.get("initial_from_joint_state/scale", 1.0)
+            self.__joint_offset = self.get("initial_from_joint_state/offset", 0.0)
+            self.__joint_state_sub = self.node.create_subscription(
+                JointState, topic, self.__initialize_from_joint_state, 1
+            )
 
     def execute(self, named_joy=None):
         if not named_joy or not self.__enable_button:
@@ -57,6 +69,31 @@ class SharedValue(Action):
         return (
             max(self.__min_limit, min(next_val, self.__max_limit)) if self.__has_limit else next_val
         )
+
+    def __initialize_from_joint_state(self, msg: JointState):
+        if self.__joint_state_initialized:
+            return
+
+        if self.__joint_name not in msg.name:
+            return
+
+        index = msg.name.index(self.__joint_name)
+        value = msg.position[index] * self.__joint_scale + self.__joint_offset
+        if self.__has_limit:
+            value = max(self.__min_limit, min(value, self.__max_limit))
+
+        if Shared.has(self.__key):
+            Shared.update(self.__key, value)
+        else:
+            Shared.add(self.__key, value)
+
+        self.__joint_state_initialized = True
+        rclpy.logging.get_logger("shared_value").info(
+            'Initialized "{0}" from joint "{1}" = {2}'.format(self.__key, self.__joint_name, value)
+        )
+        if self.__joint_state_sub is not None:
+            self.node.destroy_subscription(self.__joint_state_sub)
+            self.__joint_state_sub = None
 
 
 Action.register_preset(SharedValue)
