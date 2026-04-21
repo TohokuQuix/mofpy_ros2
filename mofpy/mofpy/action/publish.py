@@ -29,6 +29,7 @@ class Publish(Action):
         self.__topic_type = self.get_required("topic/type")
         # TODO: QoSをパラメータで設定可能にする
         self.__qos_profile: QoSProfile = QoSProfile(depth=10)
+        self.__condition = self.get("condition")
         self.__values = self.get_required("values")
 
         self.__pub, self.__msg_class = self.create_publisher(
@@ -45,6 +46,18 @@ class Publish(Action):
         return pub, msg_class
 
     def execute(self, named_joy=None):
+        if self.__condition is not None:
+            condition_vals, success = MathExpression.expressions(
+                {"condition": self.__condition},
+                named_buttons=named_joy["buttons"] if named_joy else {},
+                named_axes=named_joy["axes"] if named_joy else {},
+            )
+            if not success:
+                rclpy.logging.get_logger("mofpy.Publish").error("Failed to expand publish condition")
+                return
+            if not bool(condition_vals["condition"]):
+                return
+
         yaml_vals = yaml.load(str(self.__values), Loader=yaml.FullLoader)
         msg = self.__msg_class()
 
