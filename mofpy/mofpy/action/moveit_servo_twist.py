@@ -10,6 +10,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
 from .action import Action
+from ..math_expression import MathExpression
 from ..move_group_utils import MoveGroupUtils
 from ..shared import Shared
 
@@ -54,7 +55,11 @@ class MoveitServoTwist(Action):
                 )
                 return
 
-        twist, is_quiet = self.__get_twist__(named_joy["axes"])
+        scale_trn, scale_rot = self.__get_scales__(named_joy)
+        if scale_trn is None or scale_rot is None:
+            return
+
+        twist, is_quiet = self.__get_twist__(named_joy["axes"], scale_trn, scale_rot)
 
         if self.__quiet_on_zero:
             if is_quiet:
@@ -111,13 +116,41 @@ class MoveitServoTwist(Action):
             time.sleep(0.01)
         return future.done()
 
-    def __get_twist__(self, named_axes):
-        dx = self.__scale_trn * self.__get_value__("x", named_axes)
-        dy = self.__scale_trn * self.__get_value__("y", named_axes)
-        dz = self.__scale_trn * self.__get_value__("z", named_axes)
-        d_roll = self.__scale_rot * self.__get_value__("R", named_axes)
-        d_pitch = self.__scale_rot * self.__get_value__("P", named_axes)
-        d_yaw = self.__scale_rot * self.__get_value__("Y", named_axes)
+    def __get_scales__(self, named_joy):
+        named_buttons = named_joy["buttons"] if named_joy else {}
+        named_axes = named_joy["axes"] if named_joy else {}
+
+        scale_trn = self.__resolve_scale__(self.__scale_trn, named_buttons, named_axes)
+        scale_rot = self.__resolve_scale__(self.__scale_rot, named_buttons, named_axes)
+        return scale_trn, scale_rot
+
+    def __resolve_scale__(self, value, named_buttons, named_axes):
+        if isinstance(value, str):
+            resolved, success = MathExpression.expressions(
+                {"value": value}, named_buttons=named_buttons, named_axes=named_axes
+            )
+            if not success:
+                rclpy.logging.get_logger("mofpy.MoveitServoTwist").error(
+                    "Failed to expand moveit_servo_twist scale expression"
+                )
+                return None
+            value = resolved["value"]
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            rclpy.logging.get_logger("mofpy.MoveitServoTwist").error(
+                "moveit_servo_twist scale must resolve to a float"
+            )
+            return None
+
+    def __get_twist__(self, named_axes, scale_trn, scale_rot):
+        dx = scale_trn * self.__get_value__("x", named_axes)
+        dy = scale_trn * self.__get_value__("y", named_axes)
+        dz = scale_trn * self.__get_value__("z", named_axes)
+        d_roll = scale_rot * self.__get_value__("R", named_axes)
+        d_pitch = scale_rot * self.__get_value__("P", named_axes)
+        d_yaw = scale_rot * self.__get_value__("Y", named_axes)
 
         twist = Twist()
         twist.linear.x = dx
